@@ -59,38 +59,53 @@ void atualizarStatus(){
 }
 
 
-void loop() {
-  // Verifica se há cliente conectado
-  EthernetClient client = server.available();
-  if (client) {
-    boolean currentLineIsBlank = true;
+void loop(){
+  EthernetClient client = server.available(); 
+  if (client) { 
     while (client.connected()) {
-      if (client.available()) {
+      if (client.available()) { 
         char c = client.read();
-        Serial.write(c);
-          if (c == '\n' && currentLineIsBlank) {
-          atualizarStatus();
-          //Inicio da resposta no formato JSON
+        if (readString.length() < 100)
+        {
+          readString += c; 
+        }  
+        if (c == '\n') { 
+          if (readString.indexOf("?") <0){ 
+          }
+          else //SENÃO,FAZ
+        if(readString.indexOf("rele1=1") >0) 
+           {
+             digitalWrite(rele1,LOW ); 
+             programacao = "manual";
+             bomba = "ligada";
+           }else{
+             digitalWrite(rele1, HIGH); 
+             programacao = "manual"; 
+             bomba = "ligada";             
+           }
+          atualizarStatus();           
           client.println("HTTP/1.1 200 OK");
           client.println("Content-Type: application/json");
           client.println("Connection: close"); 
-          client.println("Refresh: 5");  // Atualiza a página a cada 5s
           client.println();
           client.print("{ 'status': {'bomba': ");
           client.print(bomba);
           client.print(", 'programacao': ");
           client.print(programacao);
+          client.print(", 'rele2': ");
+          client.print(digitalRead(rele2));
+          client.print(", 'sensorInfer': ");
+          client.print(digitalRead(sensorInfer));
+          client.print(", 'sensorInter': ");
+          client.print(digitalRead(sensorInter));
+          client.print(", 'sensorSuper': ");
+          client.print(digitalRead(sensorSuper));
           client.println("}}");
+          readString="";
+          client.stop(); 
           break;
-        }
-        if (c == '\n') {
-          currentLineIsBlank = true;
-        } else if (c != '\r') {
-          currentLineIsBlank = false;
-        }
+       }
       }
-    }
-    delay(1);
-    client.stop();
-  }
-}
+     }
+   }
+ }
